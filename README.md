@@ -7,3 +7,7 @@
 ## 下载
 [点我](https://github.com/hekuo5310/HKMCMF-web/archive/refs/heads/main.zip)
 下载后解压到网站/public/order目录
+## 使用
+0.打开微软大战代码
+1.修改9~10行
+3.在你的原来的cart模板的scripts里面填写window.location.replace("你的网址**(要带https/http！)**");
