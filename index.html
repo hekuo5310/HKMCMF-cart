@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>商品列表</title>
+
+<!-- Favicon -->
+<link rel="icon" type="image/jpeg" href="https://aliyun-oss-bucket.d-dos.cc/HKMC_logo.jpg">
+<link rel="shortcut icon" type="image/jpeg" href="https://aliyun-oss-bucket.d-dos.cc/HKMC_logo.jpg">
+
+<link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/flag-icons@7.2.1/css/flag-icons.min.css"
+/>
+
+<style>
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Arial, Helvetica, sans-serif;
+  background: #fff;
+  color: #000;
+}
+
+.layout {
+  display: flex;
+  min-height: 100vh;
+}
+
+/* Loading */
+#loading {
+  position: fixed;
+  inset: 0;
+  background: rgba(255,255,255,0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+}
+
+/* Sidebar */
+.sidebar {
+  width: 200px;
+  border-right: 1px solid #000;
+  padding: 16px;
+  background: #fff;
+  overflow-y: auto;
+}
+
+.group-link {
+  padding: 8px 10px;
+  cursor: pointer;
+  margin-bottom: 6px;
+  border: 1px solid transparent;
+  font-size: 14px;
+  transition: all 0.2s;
+  border-radius: 6px;
+}
+
+.group-link.active,
+.group-link:hover {
+  background: #000;
+  color: #fff;
+}
+
+/* Content */
+.content {
+  flex: 1;
+  padding: 16px 24px;
+  overflow-x: hidden;
+}
+
+/* Tabs */
+.tabs {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: #fff;
+  display: flex;
+  gap: 8px;
+  padding: 8px 0;
+  border-bottom: 1px solid #000;
+  margin-bottom: 16px;
+  overflow-x: auto;
+  white-space: nowrap;
+}
+
+.tabs::-webkit-scrollbar {
+  height: 4px;
+}
+
+.tabs::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 2px;
+}
+
+.tab {
+  padding: 6px 14px;
+  border: 1px solid #000;
+  cursor: pointer;
+  font-size: 14px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: all 0.2s;
+  border-radius: 6px;
+}
+
+.tab.active {
+  background: #000;
+  color: #fff;
+}
+
+/* Sub group */
+.sub-group {
+  margin-bottom: 48px;
+}
+
+.sub-title {
+  font-size: 18px;
+  font-weight: bold;
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.sub-desc {
+  font-size: 13px;
+  color: #555;
+  margin-bottom: 14px;
+  line-height: 1.5;
+}
+
+/* Products PC */
+.products {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 20px;
+}
+
+.product-card {
+  border: 1px solid #000;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  border-radius: 8px;
+}
+
+.product-name {
+  font-size: 15px;
+  margin-bottom: 6px;
+  font-weight: 500;
+}
+
+.product-price {
+  font-size: 22px;
+  font-weight: bold;
+  margin-bottom: 6px;
+}
+
+.product-desc {
+  font-size: 13px;
+  margin-bottom: 8px;
+  line-height: 1.4;
+  color: #333;
+}
+
+.product-meta {
+  font-size: 13px;
+  margin-bottom: 10px;
+  color: #666;
+}
+
+.order-btn {
+  margin-top: auto;
+  padding: 10px;
+  background: #000;
+  color: #fff;
+  border: 1px solid #000;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s;
+  border-radius: 6px;
+}
+
+.order-btn:hover:not(.disabled) {
+  background: #333;
+}
+
+.order-btn.disabled {
+  background: #ccc;
+  border-color: #ccc;
+  color: #666;
+  cursor: not-allowed;
+}
+
+/* Footer */
+footer {
+  margin-top: 40px;
+  border-top: 1px solid #000;
+  padding: 12px 0;
+  text-align: center;
+  font-size: 12px;
+  opacity: 0.7;
+}
+
+/* 移动端汉堡菜单 */
+.mobile-header {
+  display: none;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: #fff;
+  border-bottom: 1px solid #000;
+  padding: 12px 16px;
+}
+
+.menu-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: bold;
+  padding: 8px 12px;
+  border: 1px solid #000;
+  border-radius: 8px;
+  width: fit-content;
+}
+
+.hamburger {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  width: 24px;
+}
+
+.hamburger span {
+  display: block;
+  height: 3px;
+  background: #000;
+  transition: all 0.3s;
+}
+
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 98;
+}
+
+/* ===== 手机端修复 ===== */
+@media (max-width: 768px) {
+  
+  /* 显示移动端头部 */
+  .mobile-header {
+    display: block;
+  }
+
+  /* 侧边栏改为抽屉式 */
+  .sidebar {
+    position: fixed;
+    left: -220px;
+    top: 0;
+    bottom: 0;
+    width: 220px;
+    z-index: 99;
+    transition: left 0.3s;
+    box-shadow: 2px 0 8px rgba(0,0,0,0.1);
+    border-radius: 0 12px 12px 0;
+  }
+
+  .sidebar.open {
+    left: 0;
+  }
+
+  .sidebar-overlay.show {
+    display: block;
+  }
+
+  /* 内容区域全宽 */
+  .layout {
+    flex-direction: column;
+  }
+
+  .content {
+    padding: 12px;
+    width: 100%;
+  }
+
+  /* 标签栏优化 */
+  .tabs {
+    gap: 6px;
+    padding: 6px 0;
+    margin-bottom: 12px;
+  }
+
+  .tab {
+    font-size: 13px;
+    padding: 5px 12px;
+  }
+
+  /* 子分组标题 */
+  .sub-group {
+    margin-bottom: 32px;
+  }
+
+  .sub-title {
+    font-size: 16px;
+  }
+
+  .sub-desc {
+    font-size: 12px;
+  }
+
+  /* 产品卡片垂直排列 */
+  .products {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .product-card {
+    width: 100%;
+  }
+
+  .product-price {
+    font-size: 20px;
+  }
+
+  .order-btn {
+    padding: 12px;
+    font-size: 15px;
+  }
+
+  /* Footer */
+  footer {
+    margin-top: 24px;
+    font-size: 11px;
+  }
+}
+
+/* 小屏手机优化 */
+@media (max-width: 480px) {
+  .sidebar {
+    width: 200px;
+    left: -220px;
+  }
+
+  .content {
+    padding: 10px;
+  }
+
+  .product-name {
+    font-size: 14px;
+  }
+
+  .product-price {
+    font-size: 18px;
+  }
+
+  .product-desc,
+  .product-meta {
+    font-size: 12px;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<div id="loading">加载中…</div>
+
+<!-- 移动端头部 -->
+<div class="mobile-header">
+  <div class="menu-toggle" onclick="toggleSidebar()">
+    <div class="hamburger">
+      <span></span>
+      <span></span>
+      <span></span>
+    </div>
+    <span id="current-group">选择分类</span>
+  </div>
+</div>
+
+<!-- 侧边栏遮罩 -->
+<div class="sidebar-overlay" id="overlay" onclick="toggleSidebar()"></div>
+
+<div class="layout">
+  <aside class="sidebar" id="sidebar"></aside>
+
+  <main class="content">
+    <div class="tabs" id="tabs"></div>
+    <div id="content"></div>
+  </main>
+</div>
+
+<script>
+// 切换侧边栏
+function toggleSidebar() {
+  const sidebar = document.getElementById('sidebar');
+  const overlay = document.getElementById('overlay');
+  sidebar.classList.toggle('open');
+  overlay.classList.toggle('show');
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  const API_URL = "/v1/products";
+  const sidebar = document.getElementById("sidebar");
+  const tabs = document.getElementById("tabs");
+  const content = document.getElementById("content");
+  const loading = document.getElementById("loading");
+  const currentGroupSpan = document.getElementById("current-group");
+
+  function decodeHTML(html) {
+    const t = document.createElement("textarea");
+    t.innerHTML = html || "";
+    return t.value;
+  }
+
+  function flagFromName(name) {
+    if (!name.includes("^")) return "";
+    const code = name.split("^")[0].toUpperCase();
+    if (code === "TW") return "fi fi-cn";
+    return "fi fi-" + code.toLowerCase();
+  }
+
+  function cleanName(name) {
+    return name.includes("^") ? name.split("^")[1] : name;
+  }
+
+  fetch(API_URL).then(r => r.json()).then(res => {
+    loading.style.display = "none";
+    const firstGroups = res.data.first_group;
+    let current = firstGroups[0];
+
+    // 初始化当前分组名称
+    if (currentGroupSpan) {
+      currentGroupSpan.textContent = current.name;
+    }
+
+    firstGroups.forEach((g, i) => {
+      const el = document.createElement("div");
+      el.className = "group-link" + (i === 0 ? " active" : "");
+      el.textContent = g.name;
+      el.onclick = () => {
+        document.querySelectorAll(".group-link").forEach(x => x.classList.remove("active"));
+        el.classList.add("active");
+        current = g;
+        
+        // 更新移动端标题
+        if (currentGroupSpan) {
+          currentGroupSpan.textContent = g.name;
+        }
+        
+        // 移动端关闭侧边栏
+        if (window.innerWidth <= 768) {
+          toggleSidebar();
+        }
+        
+        render();
+      };
+      sidebar.appendChild(el);
+    });
+
+    function render() {
+      tabs.innerHTML = "";
+      content.innerHTML = "";
+
+      current.group.forEach(sg => {
+        const tab = document.createElement("div");
+        tab.className = "tab";
+        tab.textContent = cleanName(sg.name);
+        tab.onclick = () => {
+          document.getElementById("sg-" + sg.id)
+            .scrollIntoView({ behavior: "smooth", block: "start" });
+        };
+        tabs.appendChild(tab);
+
+        const section = document.createElement("div");
+        section.className = "sub-group";
+        section.id = "sg-" + sg.id;
+
+        const flag = flagFromName(sg.name);
+
+        section.innerHTML = `
+          <div class="sub-title">
+            ${flag ? `<span class="${flag}"></span>` : ""}
+            ${cleanName(sg.name)}
+          </div>
+          ${sg.headline || sg.tagline ? `
+            <div class="sub-desc">
+              ${decodeHTML(sg.headline || "")}
+              ${decodeHTML(sg.tagline || "")}
+            </div>` : ""}
+          <div class="products"></div>
+        `;
+
+        const list = section.querySelector(".products");
+
+        sg.products.forEach(p => {
+          const stock = p.stock_control ? p.qty : 999;
+          const sold = stock <= 0;
+
+          const card = document.createElement("div");
+          card.className = "product-card";
+          card.innerHTML = `
+            <div class="product-name">${p.name}</div>
+            <div class="product-price">¥${p.product_price} / 月</div>
+            <div class="product-desc">${decodeHTML(p.description)}</div>
+            <div class="product-meta">库存：${sold ? "已售罄" : stock}</div>
+            <button class="order-btn ${sold ? "disabled" : ""}"
+              ${sold ? "disabled" : ""}
+              onclick="${sold ? "" : `location.href='/cart?action=configureproduct&pid=${p.id}'`}">
+              ${sold ? "已售罄" : "立即下单"}
+            </button>
+          `;
+          list.appendChild(card);
+        });
+
+        content.appendChild(section);
+      });
+
+      content.innerHTML += `<footer>© ${new Date().getFullYear()} hekuo</footer>`;
+    }
+
+    render();
+  }).catch(err => {
+    loading.textContent = "加载失败，请刷新重试";
+    console.error(err);
+  });
+});
+</script>
+
+</body>
+</html>
